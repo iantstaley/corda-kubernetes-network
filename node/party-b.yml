@@ -1,0 +1,46 @@
+apiVersion: "apps/v1"
+kind: Deployment
+metadata:
+  name: party-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: party-b
+  template:
+    metadata:
+      labels:
+        app: party-b
+    spec:
+      containers:
+        - name: party-b
+          #          these images should change to your artifact registry
+          image: europe-west2-docker.pkg.dev/canvas-hook-339503/corda/corda-os:4.9.6
+          env:
+            - name: "ROLE"
+              value: "PARTY"
+          ports:
+            - containerPort: 10002
+          volumeMounts:
+            - name: mypvc
+              mountPath: /app
+      volumes:
+        - name: mypvc
+          persistentVolumeClaim:
+            claimName: partybpvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: party-b
+spec:
+  type: NodePort
+  ports:
+    - name: p2p
+      port: 10002
+      targetPort: 10002
+    - name: rpc
+      port: 10003
+      targetPort: 10003
+  selector:
+    app: party-b
